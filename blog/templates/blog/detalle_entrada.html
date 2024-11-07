@@ -1,0 +1,61 @@
+{% extends 'core/base.html' %}
+
+{% block banner-img %}
+{{ entrada.imagen.url }}
+{% endblock %}
+
+{% block banner-txt %}
+<h1>{{ entrada.nombre }}</h1>
+<span class="subheading">{{ entrada.resumen }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="container px-4 px-lg-5">
+    <div class="row gx-4 gx-lg-5 justify-content-center">
+        <div class="col-md-10 col-lg-8 col-xl-7">
+
+            <!-- Contenido de la entrada -->
+             <hr class="my-4" />
+            <article>
+                <p>{{ entrada.descripcion|linebreaks }}</p>
+            </article>
+            <hr class="my-4" />
+            <!-- Imagen principal -->
+            <div class="mb-4 text-center">
+                <img src="{{ entrada.imagen.url }}" alt="{{ entrada.nombre }}" class="img-fluid rounded mb-4 width: 50px; height: auto;">
+            </div>
+            <hr class="my-4" />
+            <!-- Información adicional -->
+            <p class="post-meta">Publicado el {{ entrada.fecha_creacion|date:"d M Y" }} | Última modificación el {{ entrada.fecha_modificacion|date:"d M Y" }}</p>
+            <!-- Navegación entre entradas -->
+            <nav class="blog-pagination my-5">
+                <ul class="pagination justify-content-between">
+                    {% if anterior_entrada %}
+                    <li class="page-item">
+                        <a class="btn btn-outline-primary" href="{% url 'detalle_entrada' anterior_entrada.id %}">
+                            ← Entrada Anterior: {{ anterior_entrada.nombre }}
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="btn btn-outline-secondary disabled">← No hay entrada anterior</span>
+                    </li>
+                    {% endif %}
+                    {% if siguiente_entrada %}
+                    <li class="page-item">
+                        <a class="btn btn-outline-primary" href="{% url 'detalle_entrada' siguiente_entrada.id %}">
+                            Entrada Siguiente: {{ siguiente_entrada.nombre }} →
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="btn btn-outline-secondary disabled">No hay entrada siguiente →</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
