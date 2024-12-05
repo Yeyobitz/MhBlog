@@ -18,8 +18,8 @@
         <!-- Navigation-->
         <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
             <div class="container px-4 px-lg-5">
-                <a class="navbar-brand" href="/">
-                    <img src="{% static 'core/img/logo.png' %}" alt="Monster Hunter Blog Logo" height="40">
+                <a class="navbar-brand" href="{% url 'index' %}">
+                    <img src="{% static 'core/img/logo.png' %}" alt="Monster Hunter Blog Logo">
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
                     Menu
@@ -27,35 +27,72 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarResponsive">
                     <ul class="navbar-nav ms-auto py-4 py-lg-0">
-                        <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'index' %}">Inicio</a></li>
-                        <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'blog:lista_entradas' %}">Entradas</a></li>
-                        <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'monstruos' %}">Monstruos</a></li>
-                        <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'flora' %}">Flora</a></li>
-                        <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'fauna' %}">Fauna</a></li>
+                        <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'small_monsters' %}">Monstruos Pequeños</a></li>
+                        <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'large_monsters' %}">Monstruos Grandes</a></li>
+                        <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'elder_dragons' %}">Dragones Ancianos</a></li>
                         {% if user.is_authenticated %}
                             <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'blog:crear_entrada' %}">Crear Entrada</a></li>
                             <li class="nav-item">
-                                <a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'logout' %}">Cerrar Sesión ({{ user.username }})</a>
+                                <a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'logout' %}">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span class="d-lg-none">Cerrar Sesión ({{ user.username }})</span>
+                                </a>
                             </li>
                         {% else %}
-                            <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'blog:registro' %}">Registro</a></li>
-                            <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'login' %}">Login</a></li>
+                            <li class="nav-item">
+                                <a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'login' %}">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                    <span class="d-lg-none">Login</span>
+                                </a>
+                            </li>
                         {% endif %}
+                        <li class="nav-item search-item">
+                            <a class="nav-link search-link" href="{% url 'blog:lista_entradas' %}">
+                                <i class="fas fa-search"></i>
+                                <span class="d-lg-none">Buscar</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
         </nav>
 
+        <!-- Messages -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                <button type="button" class="close-btn" onclick="this.parentElement.remove()">&times;</button>
+                <div class="message-content">
+                    <div class="message-icon">
+                        {% if message.tags == 'success' %}
+                            <i class="fas fa-check-circle"></i>
+                        {% elif message.tags == 'error' %}
+                            <i class="fas fa-exclamation-circle"></i>
+                        {% elif message.tags == 'warning' %}
+                            <i class="fas fa-exclamation-triangle"></i>
+                        {% else %}
+                            <i class="fas fa-info-circle"></i>
+                        {% endif %}
+                    </div>
+                    <div class="message-text">{{ message }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         <!-- Page Header-->
         {% block header %}{% endblock %}
 
         <!-- Main Content-->
-        <main class="mb-4">
+        <main class="{% block main_class %}{% endblock %}">
             {% block content %}
             {% endblock %}
         </main>
 
         <!-- Footer -->
+        {% block footer %}
         <footer>
             <div class="container px-4 px-lg-5">
                 <div class="row gx-4 gx-lg-5 justify-content-center">
@@ -87,6 +124,7 @@
                 </div>
             </div>
         </footer>
+        {% endblock %}
 
         <!-- Bootstrap JS -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>

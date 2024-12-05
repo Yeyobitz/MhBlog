@@ -5,45 +5,51 @@
         {% endif %}
         <div class="card-body">
             <h2 class="card-title">{{ entrada.nombre }}</h2>
-            <p class="text-muted">
-                Por {{ entrada.autor.username|default:"Usuario Anónimo" }}
-                el {{ entrada.fecha_creacion|date:"d/m/Y" }}
-            </p>
+            <div class="metadata mb-3">
+                <p class="text-muted">
+                    Por {{ entrada.autor.username|default:"Usuario Anónimo" }}
+                    el {{ entrada.fecha_creacion|date:"d/m/Y" }}
+                </p>
+                {% if entrada.monster %}
+                <div class="monster-info">
+                    <h4>Información del Monstruo</h4>
+                    <ul class="list-unstyled">
+                        <li><strong>Tipo:</strong> {{ entrada.monster.monster_type.name }}</li>
+                        {% if entrada.monster.elements.exists %}
+                        <li>
+                            <strong>Elementos:</strong>
+                            {% for element in entrada.monster.elements.all %}
+                                <span class="badge bg-primary">{{ element.name }}</span>
+                            {% endfor %}
+                        </li>
+                        {% endif %}
+                        {% if entrada.monster.ailments.exists %}
+                        <li>
+                            <strong>Estados:</strong>
+                            {% for ailment in entrada.monster.ailments.all %}
+                                <span class="badge bg-warning">{{ ailment.name }}</span>
+                            {% endfor %}
+                        </li>
+                        {% endif %}
+                        {% if entrada.monster.weaknesses.exists %}
+                        <li>
+                            <strong>Debilidades:</strong>
+                            {% for weakness in entrada.monster.weaknesses.all %}
+                                <span class="badge bg-danger">{{ weakness.name }}</span>
+                            {% endfor %}
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
             
             <div class="descripcion mb-4">
                 {{ entrada.descripcion|linebreaks }}
             </div>
 
-            <!-- Sección de comentarios nuevos -->
-            <div class="nuevo-comentario mb-4">
-                {% if user.is_authenticated %}
-                    <form method="post" action="{% url 'blog:agregar_comentario' entrada.id %}" class="mb-3">
-                        {% csrf_token %}
-                        <div class="form-group">
-                            <label for="comentario">Deja tu comentario:</label>
-                            <textarea name="contenido" id="comentario" class="form-control" rows="3" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary mt-2">Comentar</button>
-                    </form>
-                {% else %}
-                    <div class="alert alert-info">
-                        <a href="{% url 'login' %}">Inicia sesión</a> para dejar un comentario.
-                    </div>
-                {% endif %}
-            </div>
-            
-            <!-- Comentarios existentes -->
-            {% if entrada.comentarios.exists %}
-                <div class="comentarios">
-                    <h5>Últimos comentarios:</h5>
-                    {% for comentario in entrada.comentarios.all|slice:":3" %}
-                        <div class="comentario mb-2">
-                            <p class="mb-1"><strong>{{ comentario.autor.username }}</strong> - {{ comentario.fecha|date:"d/m/Y H:i" }}</p>
-                            <p class="mb-0">{{ comentario.contenido }}</p>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
+            <!-- Sección de comentarios -->
+            {% include 'core/partials/comentarios.html' %}
         </div>
     </div>
 </div> 

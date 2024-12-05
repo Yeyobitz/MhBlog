@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.core.paginator import Paginator
-from .models import EntradaBlog, Habitat, Comentario
+from .models import EntradaBlog, Comentario, Element, Ailment, Game, MonsterGameInfo, Monster, MonsterType
 from .forms import ComentarioForm, EntradaBlogForm
 
 def inicio(request):
@@ -11,39 +11,87 @@ def inicio(request):
     return render(request, 'blog/inicio.html', {'entradas': entradas})
 
 def lista_entradas(request):
-    # Obtener parámetros de filtro
+    queryset = EntradaBlog.objects.all()
+    
+    # Búsqueda por nombre
+    search = request.GET.get('search')
+    if search:
+        queryset = queryset.filter(nombre__icontains=search)
+    
+    # Filtro por tipo
     tipo = request.GET.get('tipo')
-    habitat_id = request.GET.get('habitat')
-    
-    # Query base
-    entradas = EntradaBlog.objects.select_related('habitat', 'autor').all()
-    
-    # Aplicar filtros
     if tipo:
-        entradas = entradas.filter(tipo=tipo)
-    if habitat_id:
-        entradas = entradas.filter(habitat_id=habitat_id)
+        queryset = queryset.filter(tipo=tipo)
+    
+    # Ordenamiento
+    order = request.GET.get('order', '-fecha_creacion')
+    queryset = queryset.order_by(order)
+    
+    # Filtro por elemento
+    element = request.GET.get('element')
+    if element:
+        queryset = queryset.filter(monster__elements__id=element)
+    
+    # Filtro por estado
+    ailment = request.GET.get('ailment')
+    if ailment:
+        queryset = queryset.filter(monster__ailments__id=ailment)
+    
+    # Filtro por inicial
+    inicial = request.GET.get('inicial')
+    if inicial:
+        queryset = queryset.filter(nombre__istartswith=inicial)
+    
+    # Filtro por peligrosidad
+    danger = request.GET.get('danger')
+    if danger:
+        queryset = queryset.filter(monster__game_info__danger=danger)
+    
+    # Filtro por juego
+    game = request.GET.get('game')
+    if game:
+        queryset = queryset.filter(monster__game_info__game__id=game)
     
     # Paginación
-    paginator = Paginator(entradas, 9)  # 9 entradas por página
+    paginator = Paginator(queryset, 9)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Obtener habitats para el formulario de filtro
-    habitats = Habitat.objects.all()
-    
+    # Obtener datos para los filtros
     context = {
         'page_obj': page_obj,
-        'habitats': habitats,
+        'tipos': EntradaBlog.TIPO_CHOICES,
         'tipo_actual': tipo,
-        'habitat_actual': habitat_id,
-        'tipos': EntradaBlog.TIPO_CHOICES
+        'order': order,
+        'elements': Element.objects.all(),
+        'selected_element': element,
+        'ailments': Ailment.objects.all(),
+        'selected_ailment': ailment,
+        'inicial': inicial,
+        'danger': danger,
+        'games': Game.objects.all(),
+        'selected_game': game,
     }
     
     return render(request, 'blog/lista_entradas.html', context)
 
 def detalle_entrada(request, id):
-    entrada = get_object_or_404(EntradaBlog.objects.select_related('habitat', 'autor'), id=id)
+    entrada = get_object_or_404(
+        EntradaBlog.objects.select_related(
+            'monster', 
+            'monster__monster_type', 
+            'autor'
+        ).prefetch_related(
+            'monster__elements',
+            'monster__ailments',
+            'monster__weaknesses',
+            'monster__game_info',
+            'monster__game_info__game',
+            'comentarios',
+            'comentarios__autor'
+        ),
+        id=id
+    )
     comentarios = entrada.comentarios.select_related('autor').all()
     
     if request.method == 'POST' and request.user.is_authenticated:
@@ -70,15 +118,63 @@ def crear_entrada(request):
     if request.method == 'POST':
         form = EntradaBlogForm(request.POST, request.FILES)
         if form.is_valid():
-            entrada = form.save(commit=False)
-            entrada.autor = request.user
-            entrada.save()
-            messages.success(request, '¡Entrada creada exitosamente!')
-            return redirect('blog:detalle_entrada', id=entrada.id)
+            try:
+                # Primero creamos el monstruo base
+                monster_type = MonsterType.objects.get(name={
+                    'small_monster': 'Small Monster',
+                    'large_monster': 'Large Monster',
+                    'elder_dragon': 'Elder Dragon'
+                }[form.cleaned_data['tipo']])
+                
+                monster = Monster.objects.create(
+                    name=form.cleaned_data['nombre'],
+                    monster_type=monster_type,
+                    is_large=form.cleaned_data['tipo'] != 'small_monster'
+                )
+
+                # Actualizamos los elementos, estados y debilidades del monstruo
+                monster.elements.set(form.cleaned_data.get('elements', []))
+                monster.ailments.set(form.cleaned_data.get('ailments', []))
+                monster.weaknesses.set(form.cleaned_data.get('weaknesses', []))
+                monster.save()
+
+                # Ahora creamos la entrada
+                entrada = form.save(commit=False)
+                entrada.autor = request.user
+                entrada.monster = monster  # Asignamos el monstruo que acabamos de crear
+                entrada.save()
+
+                # Creamos la información del juego
+                MonsterGameInfo.objects.create(
+                    monster=monster,
+                    game=form.cleaned_data['game'],
+                    danger=form.cleaned_data['danger_level'],
+                    info=entrada.descripcion,
+                    image=''
+                )
+
+                messages.success(request, f'''
+                    ¡Felicitaciones, cazador! 🎉
+                    Has contribuido exitosamente con información sobre {entrada.nombre}.
+                    Tu aporte ayudará a otros cazadores en sus futuras cacerías.
+                    ¡Gracias por colaborar con la comunidad! 🏹
+                ''')
+                return redirect('blog:detalle_entrada', id=entrada.id)
+            except Exception as e:
+                messages.error(request, f'Error al crear la entrada: {str(e)}')
+        else:
+            messages.error(request, 'Por favor verifica los datos ingresados y vuelve a intentarlo.')
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.warning(request, f'Error en {field}: {error}')
     else:
         form = EntradaBlogForm()
     
-    return render(request, 'blog/crear_entrada.html', {'form': form})
+    context = {
+        'form': form,
+        'title': 'Crear Nueva Entrada',
+    }
+    return render(request, 'blog/crear_entrada.html', context)
 
 def registro(request):
     if request.method == 'POST':
@@ -90,11 +186,12 @@ def registro(request):
     else:
         form = UserCreationForm()
     
+    # Agregar clases de Bootstrap a los campos del formulario
     for field in form.fields.values():
         field.widget.attrs['class'] = 'form-control'
         field.widget.attrs['placeholder'] = field.label
     
-    return render(request, 'core/registro.html', {'form': form})
+    return render(request, 'registration/registro.html', {'form': form})
 
 def login_view(request):
     return render(request, 'core/login.html')
@@ -120,3 +217,20 @@ def agregar_comentario(request, entrada_id):
             return redirect('flora')
         else:
             return redirect('fauna')
+
+def index(request):
+    # Obtener las 9 entradas más recientes
+    entradas = EntradaBlog.objects.select_related(
+        'autor', 
+        'monster',
+        'monster__monster_type'
+    ).prefetch_related(
+        'monster__elements',
+        'monster__ailments',
+        'monster__weaknesses'
+    ).order_by('-fecha_creacion')[:9]  # Limitamos a 9 entradas
+    
+    return render(request, 'core/index.html', {
+        'entradas': entradas,
+        'show_pagination': False  # Para indicar que no queremos paginación en el index
+    })

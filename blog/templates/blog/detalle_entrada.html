@@ -2,60 +2,169 @@
 {% load static %}
 
 {% block content %}
-<article class="mb-4 mt-5">
-    <div class="container px-4 px-lg-5">
-        <div class="row gx-4 gx-lg-5 justify-content-center">
-            <div class="col-md-10">
-                <div class="post-preview">
-                    <div class="post-image-container">
-                        <img src="{{ entrada.imagen.url }}" alt="{{ entrada.nombre }}" class="post-image">
-                    </div>
-                    <div class="post-content">
-                        <div class="post-tags">
-                            <span class="tag">{{ entrada.tipo }}</span>
-                            {% if entrada.habitat %}
-                            <span class="tag">{{ entrada.habitat.nombre }}</span>
-                            {% endif %}
-                        </div>
-                        <h2 class="post-title">{{ entrada.nombre }}</h2>
-                        <p class="post-meta">
-                            Por {{ entrada.autor.username|default:"Usuario Anónimo" }}
-                            el {{ entrada.fecha_creacion|date:"d/m/Y" }}
-                        </p>
-                        <div class="post-body">
-                            {{ entrada.descripcion|linebreaks }}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sección de comentarios -->
-                <div class="comments-section mt-5">
-                    <h3>Comentarios</h3>
-                    
-                    {% if user.is_authenticated %}
-                        <form method="post" class="mb-4">
-                            {% csrf_token %}
-                            {{ form.as_p }}
-                            <button type="submit" class="btn btn-primary">Comentar</button>
-                        </form>
-                    {% else %}
-                        <p><a href="{% url 'login' %}">Inicia sesión</a> para comentar.</p>
+<div class="container px-4 px-lg-5 mt-5">
+    <div class="monster-detail">
+        <!-- Header con imagen de fondo y overlay -->
+        <header class="monster-detail-header">
+            <div class="monster-title">
+                <h1>{{ entrada.nombre }}</h1>
+                <div class="monster-badges">
+                    <span class="monster-type-badge">{{ entrada.monster.monster_type.name }}</span>
+                    {% if entrada.monster.is_large %}
+                        <span class="size-badge">Monstruo Grande</span>
                     {% endif %}
-
-                    {% for comentario in comentarios %}
-                        <div class="comment card mb-3">
-                            <div class="card-body">
-                                <h5 class="card-title">{{ comentario.autor.username }}</h5>
-                                <h6 class="card-subtitle mb-2 text-muted">{{ comentario.fecha|date:"d/m/Y H:i" }}</h6>
-                                <p class="card-text">{{ comentario.contenido|linebreaks }}</p>
-                            </div>
-                        </div>
-                    {% empty %}
-                        <p>No hay comentarios aún.</p>
-                    {% endfor %}
                 </div>
             </div>
+        </header>
+
+        <!-- Sección principal con grid -->
+        <div class="monster-detail-grid">
+            <!-- Columna izquierda: Imagen y stats básicos -->
+            <div class="monster-main-info">
+                <div class="monster-detail-image">
+                    {% if entrada.imagen %}
+                        <img src="{{ entrada.imagen.url }}" alt="{{ entrada.nombre }}">
+                    {% endif %}
+                </div>
+
+                <div class="monster-stats">
+                    <!-- Elementos -->
+                    {% if entrada.monster.elements.exists %}
+                    <div class="stat-section">
+                        <h3><i class="fas fa-fire"></i> Elementos</h3>
+                        <div class="badge-container">
+                            {% for element in entrada.monster.elements.all %}
+                                <span class="badge badge-{{ element.name|lower }}">
+                                    {{ element.name }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Estados -->
+                    {% if entrada.monster.ailments.exists %}
+                    <div class="stat-section">
+                        <h3><i class="fas fa-skull"></i> Estados</h3>
+                        <div class="badge-container">
+                            {% for ailment in entrada.monster.ailments.all %}
+                                <span class="badge badge-{{ ailment.name|lower }}">
+                                    {{ ailment.name }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Debilidades -->
+                    {% if entrada.monster.weaknesses.exists %}
+                    <div class="stat-section">
+                        <h3><i class="fas fa-bullseye"></i> Debilidades</h3>
+                        <div class="badge-container">
+                            {% for weakness in entrada.monster.weaknesses.all %}
+                                <span class="badge badge-weakness">
+                                    {{ weakness.name }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Columna derecha: Descripción y detalles -->
+            <div class="monster-details">
+                <!-- Descripción -->
+                <section class="detail-section">
+                    <h2>Descripción</h2>
+                    <div class="detail-description">
+                        {{ entrada.descripcion|linebreaks }}
+                    </div>
+                </section>
+
+                <!-- Apariciones en juegos -->
+                {% if entrada.monster.game_info.exists %}
+                <section class="detail-section games-section">
+                    <h2>Historial de Apariciones</h2>
+                    <div class="game-list">
+                        {% for info in entrada.monster.game_info.all %}
+                        <div class="game-card">
+                            <div class="game-header">
+                                <img src="{% static 'core/img/games/'|add:info.game.name|slugify|add:'.webp' %}" 
+                                     alt="{{ info.game.name }}" class="game-logo">
+                                <h3>{{ info.game.name }}</h3>
+                            </div>
+                            
+                            <div class="game-content">
+                                {% if info.danger %}
+                                <div class="danger-rating">
+                                    <span class="rating-label">Nivel de amenaza:</span>
+                                    <div class="stars">
+                                        {% with ''|center:info.danger as range %}
+                                            {% for _ in range %}⭐{% endfor %}
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="game-description">
+                                    {{ info.info|linebreaks }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+                {% endif %}
+            </div>
         </div>
+
+        <!-- Sección de comentarios -->
+        <section class="comments-section">
+            <h2>Comentarios de la Comunidad</h2>
+            {% if user.is_authenticated %}
+                <form method="post" class="comment-form">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <textarea name="contenido" class="form-control" rows="3" 
+                                placeholder="Comparte tu experiencia cazando este monstruo..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-comment"></i> Comentar
+                    </button>
+                </form>
+            {% else %}
+                <div class="login-prompt">
+                    <i class="fas fa-lock"></i>
+                    <p><a href="{% url 'login' %}">Inicia sesión</a> para compartir tu experiencia</p>
+                </div>
+            {% endif %}
+
+            <div class="comments-list">
+                {% for comentario in comentarios %}
+                    <div class="comment">
+                        <div class="comment-header">
+                            <div class="comment-author">
+                                <i class="fas fa-user"></i>
+                                <strong>{{ comentario.autor.username }}</strong>
+                            </div>
+                            <span class="comment-date">
+                                <i class="fas fa-clock"></i>
+                                {{ comentario.fecha|date:"d/m/Y H:i" }}
+                            </span>
+                        </div>
+                        <div class="comment-content">
+                            {{ comentario.contenido|linebreaks }}
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="no-comments">
+                        <i class="fas fa-comments"></i>
+                        <p>No hay comentarios aún. ¡Sé el primero en compartir tu experiencia!</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
     </div>
-</article>
+</div>
 {% endblock %}

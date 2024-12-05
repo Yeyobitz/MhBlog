@@ -10,6 +10,13 @@
                 <div class="card-header">Filtros</div>
                 <div class="card-body">
                     <form method="get">
+                        <!-- Búsqueda por nombre -->
+                        <div class="mb-3">
+                            <label class="form-label">Buscar</label>
+                            <input type="text" name="search" class="form-control" placeholder="Nombre del monstruo..." value="{{ request.GET.search }}">
+                        </div>
+
+                        <!-- Tipo -->
                         <div class="mb-3">
                             <label class="form-label">Tipo</label>
                             <select name="tipo" class="form-select">
@@ -21,7 +28,85 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <button type="submit" class="btn btn-primary">Filtrar</button>
+
+                        <!-- Ordenar por -->
+                        <div class="mb-3">
+                            <label class="form-label">Ordenar por</label>
+                            <select name="order" class="form-select">
+                                <option value="nombre" {% if order == 'nombre' %}selected{% endif %}>Nombre (A-Z)</option>
+                                <option value="-nombre" {% if order == '-nombre' %}selected{% endif %}>Nombre (Z-A)</option>
+                                <option value="-fecha_creacion" {% if order == '-fecha_creacion' %}selected{% endif %}>Más recientes</option>
+                                <option value="fecha_creacion" {% if order == 'fecha_creacion' %}selected{% endif %}>Más antiguos</option>
+                            </select>
+                        </div>
+
+                        <!-- Filtro por elemento -->
+                        <div class="mb-3">
+                            <label class="form-label">Elemento</label>
+                            <select name="element" class="form-select">
+                                <option value="">Todos</option>
+                                {% for element in elements %}
+                                <option value="{{ element.id }}" {% if element.id == selected_element %}selected{% endif %}>
+                                    {{ element.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Filtro por estado (ailment) -->
+                        <div class="mb-3">
+                            <label class="form-label">Estado</label>
+                            <select name="ailment" class="form-select">
+                                <option value="">Todos</option>
+                                {% for ailment in ailments %}
+                                <option value="{{ ailment.id }}" {% if ailment.id == selected_ailment %}selected{% endif %}>
+                                    {{ ailment.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Filtro por inicial -->
+                        <div class="mb-3">
+                            <label class="form-label">Inicial</label>
+                            <div class="btn-group d-flex flex-wrap" role="group">
+                                {% for letra in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+                                <input type="radio" class="btn-check" name="inicial" id="inicial{{ letra }}" value="{{ letra }}" 
+                                       {% if inicial == letra %}checked{% endif %}>
+                                <label class="btn btn-outline-primary btn-sm" for="inicial{{ letra }}">{{ letra }}</label>
+                                {% endfor %}
+                                <input type="radio" class="btn-check" name="inicial" id="inicialTodos" value="" 
+                                       {% if not inicial %}checked{% endif %}>
+                                <label class="btn btn-outline-primary btn-sm" for="inicialTodos">Todos</label>
+                            </div>
+                        </div>
+
+                        <!-- Filtro por peligrosidad -->
+                        <div class="mb-3">
+                            <label class="form-label">Nivel de peligro</label>
+                            <select name="danger" class="form-select">
+                                <option value="">Todos</option>
+                                {% for i in "12345678910" %}
+                                <option value="{{ i }}" {% if danger == i %}selected{% endif %}>⭐ {{ i }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Filtro por juego -->
+                        <div class="mb-3">
+                            <label class="form-label">Juego</label>
+                            <select name="game" class="form-select">
+                                <option value="">Todos</option>
+                                {% for game in games %}
+                                <option value="{{ game.id }}" {% if game.id == selected_game %}selected{% endif %}>
+                                    {{ game.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                        <a href="?" class="btn btn-secondary w-100 mt-2">Limpiar filtros</a>
                     </form>
                 </div>
             </div>
@@ -33,7 +118,11 @@
                 {% for entrada in page_obj %}
                 <div class="post-preview">
                     <div class="post-image-container">
-                        <img src="{{ entrada.imagen.url }}" alt="{{ entrada.nombre }}" class="post-image">
+                        {% if entrada.imagen %}
+                            <img src="{{ entrada.imagen.url }}" alt="{{ entrada.nombre }}" class="post-image">
+                        {% else %}
+                            <img src="{% static 'core/img/monsters/default.png' %}" alt="{{ entrada.nombre }}" class="post-image">
+                        {% endif %}
                     </div>
                     <div class="post-content">
                         <h2 class="post-title">{{ entrada.nombre }}</h2>
