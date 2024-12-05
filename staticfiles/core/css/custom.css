@@ -471,4 +471,169 @@ body {
     padding: 0.75rem 1rem;
     margin-top: 0.5rem;
     font-size: 0.9rem;
-} 
+}
+
+/* ==================== Footer ==================== */
+footer {
+    background-color: #1a1a1a;
+    padding: 3rem 0;
+    margin-top: 4rem;
+}
+
+footer .list-inline {
+    margin-bottom: 2rem;
+}
+
+footer .list-inline-item {
+    margin: 0 1rem;
+}
+
+footer .fa-stack {
+    font-size: 1.5rem;
+}
+
+footer .social-link {
+    color: var(--primary-color);
+    display: inline-block;
+    transition: transform var(--transition-speed) ease;
+}
+
+footer .social-link:hover {
+    color: var(--primary-hover);
+    transform: translateY(-5px);
+}
+
+.copyright {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+    margin: 0;
+    padding-top: 1rem;
+}
+
+.copyright a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.copyright a:hover {
+    color: var(--primary-hover);
+}
+
+/* Asegurarse de que los íconos de Font Awesome se muestren correctamente */
+footer .fa-stack-2x {
+    font-size: 2em;
+}
+
+footer .fa-stack-1x {
+    font-size: 1em;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    footer {
+        padding: 2rem 0;
+    }
+    
+    footer .list-inline-item {
+        margin: 0 0.5rem;
+    }
+    
+    footer .copyright {
+        font-size: 0.9rem;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+    #mainNav .navbar-nav {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+        background-color: rgba(0, 0, 0, 0.9);
+    }
+
+    #mainNav.is-fixed .navbar-nav {
+        background-color: rgba(255, 255, 255, 0.95);
+    }
+}
+
+/* Estilos para las entradas detalladas */
+.entrada-detallada {
+    margin-bottom: 3rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.entrada-detallada:hover {
+    transform: translateY(-5px);
+}
+
+.entrada-detallada .card-img-top {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    max-height: none;
+}
+
+.entrada-detallada .card-title {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.entrada-detallada .habitat-info {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+}
+
+.entrada-detallada .comentarios {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding-top: 1rem;
+    margin-top: 1rem;
+}
+
+.entrada-detallada .comentario {
+    padding: 0.5rem;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 0.25rem;
+}
+
+.pagination .page-link {
+    color: var(--primary-color);
+}
+
+.pagination .active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.nuevo-comentario {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding-top: 1rem;
+}
+
+.nuevo-comentario textarea {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.comentarios {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.comentario {
+    background-color: rgba(0, 0, 0, 0.02);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.comentario:last-child {
+    margin-bottom: 0;
+}

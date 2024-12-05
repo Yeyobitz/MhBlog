@@ -1,0 +1,49 @@
+<div class="entrada-detallada mb-5 mt-5">
+    <div class="card">
+        {% if entrada.imagen %}
+            <img src="{{ entrada.imagen.url }}" class="card-img-top" alt="{{ entrada.nombre }}">
+        {% endif %}
+        <div class="card-body">
+            <h2 class="card-title">{{ entrada.nombre }}</h2>
+            <p class="text-muted">
+                Por {{ entrada.autor.username|default:"Usuario Anónimo" }}
+                el {{ entrada.fecha_creacion|date:"d/m/Y" }}
+            </p>
+            
+            <div class="descripcion mb-4">
+                {{ entrada.descripcion|linebreaks }}
+            </div>
+
+            <!-- Sección de comentarios nuevos -->
+            <div class="nuevo-comentario mb-4">
+                {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'blog:agregar_comentario' entrada.id %}" class="mb-3">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="comentario">Deja tu comentario:</label>
+                            <textarea name="contenido" id="comentario" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-2">Comentar</button>
+                    </form>
+                {% else %}
+                    <div class="alert alert-info">
+                        <a href="{% url 'login' %}">Inicia sesión</a> para dejar un comentario.
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Comentarios existentes -->
+            {% if entrada.comentarios.exists %}
+                <div class="comentarios">
+                    <h5>Últimos comentarios:</h5>
+                    {% for comentario in entrada.comentarios.all|slice:":3" %}
+                        <div class="comentario mb-2">
+                            <p class="mb-1"><strong>{{ comentario.autor.username }}</strong> - {{ comentario.fecha|date:"d/m/Y H:i" }}</p>
+                            <p class="mb-0">{{ comentario.contenido }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div> 

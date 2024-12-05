@@ -97,5 +97,26 @@ def registro(request):
     return render(request, 'core/registro.html', {'form': form})
 
 def login_view(request):
-    # Tu lógica de login aquí
     return render(request, 'core/login.html')
+
+@login_required
+def agregar_comentario(request, entrada_id):
+    if request.method == 'POST':
+        entrada = get_object_or_404(EntradaBlog, id=entrada_id)
+        contenido = request.POST.get('contenido')
+        
+        if contenido:
+            Comentario.objects.create(
+                entrada=entrada,
+                autor=request.user,
+                contenido=contenido
+            )
+            messages.success(request, 'Comentario agregado exitosamente.')
+        
+        # Determinar la página correcta para redireccionar
+        if entrada.tipo in ['Monstruo grande', 'Monstruo chico']:
+            return redirect('monstruos')
+        elif entrada.tipo == 'Flora':
+            return redirect('flora')
+        else:
+            return redirect('fauna')

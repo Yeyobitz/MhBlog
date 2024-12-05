@@ -8,4 +8,5 @@ urlpatterns = [
     path('entrada/<int:id>/', views.detalle_entrada, name='detalle_entrada'),
     path('crear/', views.crear_entrada, name='crear_entrada'),
     path('registro/', views.registro, name='registro'),
+    path('comentario/<int:entrada_id>/', views.agregar_comentario, name='agregar_comentario'),
 ]
