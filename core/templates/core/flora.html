@@ -1,9 +1,21 @@
 {% extends 'core/base.html' %}
 {% load static %}
+
 {% block banner-img %}
 {% static 'core/img/flora.webp' %}
 {% endblock %}
+
 {% block banner-txt %}
 <h1>Flora</h1>
-<h2 class="subheading">Escencial para una caza efectiva</h2>
+<h2 class="subheading">Recursos naturales del nuevo mundo</h2>
+{% endblock %}
+
+{% block content %}
+<div class="container px-4 px-lg-5">
+    <div class="row gx-4 gx-lg-5 justify-content-center">
+        <div class="col-md-10 col-lg-8 col-xl-7">
+            <!-- Contenido de flora -->
+        </div>
+    </div>
+</div>
 {% endblock %}

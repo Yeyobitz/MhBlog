@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from blog.models import EntradaBlog
+from django.contrib.auth.views import LoginView
 
 # Vista para la página de inicio
 def index(request):
@@ -53,4 +54,14 @@ def load_more_entries(request):
         'has_more': page_obj.has_next() and (page_number * 5) < total_entries
     }
     return JsonResponse(data)
+
+class CustomLoginView(LoginView):
+    template_name = 'core/login.html'
+    redirect_authenticated_user = True
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        for field in form.fields.values():
+            field.widget.attrs['class'] = 'form-control'
+        return form
 

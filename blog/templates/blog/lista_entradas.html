@@ -1,0 +1,87 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block banner-img %}
+{% static 'core/img/blog-bg.webp' %}
+{% endblock %}
+
+{% block banner-txt %}
+<h1>Blog</h1>
+<h2 class="subheading">Experiencias de caza</h2>
+{% endblock %}
+
+{% block content %}
+<div class="container px-4 px-lg-5">
+    <div class="row gx-4 gx-lg-5">
+        <!-- Filtros -->
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-header">Filtros</div>
+                <div class="card-body">
+                    <form method="get">
+                        <div class="mb-3">
+                            <label class="form-label">Tipo</label>
+                            <select name="tipo" class="form-select">
+                                <option value="">Todos</option>
+                                {% for tipo_id, tipo_nombre in tipos %}
+                                <option value="{{ tipo_id }}" {% if tipo_id == tipo_actual %}selected{% endif %}>
+                                    {{ tipo_nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Filtrar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lista de entradas -->
+        <div class="col-md-9">
+            <div class="posts-grid">
+                {% for entrada in page_obj %}
+                <div class="post-preview">
+                    <div class="post-image-container">
+                        <img src="{{ entrada.imagen.url }}" alt="{{ entrada.nombre }}" class="post-image">
+                    </div>
+                    <div class="post-content">
+                        <h2 class="post-title">{{ entrada.nombre }}</h2>
+                        <p class="post-subtitle">{{ entrada.resumen }}</p>
+                        <p class="post-meta">
+                            Por {{ entrada.autor.username|default:"Usuario Anónimo" }}
+                            el {{ entrada.fecha_creacion|date:"d/m/Y" }}
+                        </p>
+                        <a href="{% url 'blog:detalle_entrada' entrada.id %}" class="post-button">Leer más</a>
+                    </div>
+                </div>
+                {% empty %}
+                <p>No hay entradas disponibles.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Paginación -->
+            {% if page_obj.paginator.num_pages > 1 %}
+            <nav aria-label="Paginación">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
+                    </li>
+                    {% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

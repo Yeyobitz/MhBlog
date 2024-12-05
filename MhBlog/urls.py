@@ -1,19 +1,15 @@
 from django.contrib import admin
 from django.urls import path, include
-from core import views as core_views
-from blog import views as blog_views
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.auth import views as auth_views
+from core.views import CustomLoginView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', core_views.index, name='index'),
-    path('monstruos/', core_views.monstruos, name='monstruos'),
-    path('flora/', core_views.flora, name='flora'),
-    path('fauna/', core_views.fauna, name='fauna'),
-    path('entrada/<int:id>/', blog_views.detalle_entrada, name='detalle_entrada'),
+    path('', include('core.urls')),
     path('blog/', include('blog.urls')),
-    path('load-more-entries/', core_views.load_more_entries, name='load_more_entries'),
-]
-
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # Rutas de autenticación
+    path('login/', CustomLoginView.as_view(), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

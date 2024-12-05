@@ -1,9 +1,21 @@
 {% extends 'core/base.html' %}
 {% load static %}
+
 {% block banner-img %}
-{% static 'core/img/fauna.jpg' %}
+{% static 'core/img/fauna.webp' %}
 {% endblock %}
+
 {% block banner-txt %}
 <h1>Fauna</h1>
-<span class="subheading">No todo en este mundo te quiere comer, cierto?</span>
+<h2 class="subheading">Criaturas del nuevo mundo</h2>
+{% endblock %}
+
+{% block content %}
+<div class="container px-4 px-lg-5">
+    <div class="row gx-4 gx-lg-5 justify-content-center">
+        <div class="col-md-10 col-lg-8 col-xl-7">
+            <!-- Contenido de fauna -->
+        </div>
+    </div>
+</div>
 {% endblock %}

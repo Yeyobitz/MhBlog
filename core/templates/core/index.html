@@ -1,10 +1,25 @@
 {% extends 'core/base.html' %}
 {% load static %}
+
 {% block banner-img %}
-{% static 'core/img/background.webp' %}
+{% static 'core/img/home-bg.webp' %}
 {% endblock %}
+
 {% block banner-txt %}
-<h1>Monster Hunter</h1>
-<span class="subheading">Y su gran ecosistema</span>
+<h1>Monster Hunter Blog</h1>
+<h2 class="subheading">Tu guía definitiva para la caza</h2>
 {% endblock %}
-<h2 class="my-4">Últimas entradas</h2>
+
+{% block content %}
+<div class="container px-4 px-lg-5">
+    <div class="row gx-4 gx-lg-5 justify-content-center">
+        <div class="col-md-10 col-lg-8 col-xl-7">
+            <!-- Contenido del index -->
+            <div class="post-preview">
+                <h2>Bienvenido Cazador</h2>
+                <p>Encuentra toda la información que necesitas sobre monstruos, flora y fauna del mundo de Monster Hunter.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

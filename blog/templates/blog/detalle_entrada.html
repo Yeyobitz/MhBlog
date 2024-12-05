@@ -1,61 +1,61 @@
 {% extends 'core/base.html' %}
-
-{% block banner-img %}
-{{ entrada.imagen.url }}
-{% endblock %}
-
-{% block banner-txt %}
-<h1>{{ entrada.nombre }}</h1>
-<span class="subheading">{{ entrada.resumen }}</span>
-{% endblock %}
+{% load static %}
 
 {% block content %}
-<div class="container px-4 px-lg-5">
-    <div class="row gx-4 gx-lg-5 justify-content-center">
-        <div class="col-md-10 col-lg-8 col-xl-7">
+<article class="mb-4">
+    <div class="container px-4 px-lg-5">
+        <div class="row gx-4 gx-lg-5 justify-content-center">
+            <div class="col-md-10">
+                <div class="post-preview">
+                    <div class="post-image-container">
+                        <img src="{{ entrada.imagen.url }}" alt="{{ entrada.nombre }}" class="post-image">
+                    </div>
+                    <div class="post-content">
+                        <div class="post-tags">
+                            <span class="tag">{{ entrada.tipo }}</span>
+                            {% if entrada.habitat %}
+                            <span class="tag">{{ entrada.habitat.nombre }}</span>
+                            {% endif %}
+                        </div>
+                        <h2 class="post-title">{{ entrada.nombre }}</h2>
+                        <p class="post-meta">
+                            Por {{ entrada.autor.username|default:"Usuario Anónimo" }}
+                            el {{ entrada.fecha_creacion|date:"d/m/Y" }}
+                        </p>
+                        <div class="post-body">
+                            {{ entrada.descripcion|linebreaks }}
+                        </div>
+                    </div>
+                </div>
 
-            <!-- Contenido de la entrada -->
-             <hr class="my-4" />
-            <article>
-                <p>{{ entrada.descripcion|linebreaks }}</p>
-            </article>
-            <hr class="my-4" />
-            <!-- Imagen principal -->
-            <div class="mb-4 text-center">
-                <img src="{{ entrada.imagen.url }}" alt="{{ entrada.nombre }}" class="img-fluid rounded mb-4 width: 50px; height: auto;">
+                <!-- Sección de comentarios -->
+                <div class="comments-section mt-5">
+                    <h3>Comentarios</h3>
+                    
+                    {% if user.is_authenticated %}
+                        <form method="post" class="mb-4">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <button type="submit" class="btn btn-primary">Comentar</button>
+                        </form>
+                    {% else %}
+                        <p><a href="{% url 'login' %}">Inicia sesión</a> para comentar.</p>
+                    {% endif %}
+
+                    {% for comentario in comentarios %}
+                        <div class="comment card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ comentario.autor.username }}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">{{ comentario.fecha|date:"d/m/Y H:i" }}</h6>
+                                <p class="card-text">{{ comentario.contenido|linebreaks }}</p>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p>No hay comentarios aún.</p>
+                    {% endfor %}
+                </div>
             </div>
-            <hr class="my-4" />
-            <!-- Información adicional -->
-            <p class="post-meta">Publicado el {{ entrada.fecha_creacion|date:"d M Y" }} | Última modificación el {{ entrada.fecha_modificacion|date:"d M Y" }}</p>
-            <!-- Navegación entre entradas -->
-            <nav class="blog-pagination my-5">
-                <ul class="pagination justify-content-between">
-                    {% if anterior_entrada %}
-                    <li class="page-item">
-                        <a class="btn btn-outline-primary" href="{% url 'detalle_entrada' anterior_entrada.id %}">
-                            ← Entrada Anterior: {{ anterior_entrada.nombre }}
-                        </a>
-                    </li>
-                    {% else %}
-                    <li class="page-item disabled">
-                        <span class="btn btn-outline-secondary disabled">← No hay entrada anterior</span>
-                    </li>
-                    {% endif %}
-                    {% if siguiente_entrada %}
-                    <li class="page-item">
-                        <a class="btn btn-outline-primary" href="{% url 'detalle_entrada' siguiente_entrada.id %}">
-                            Entrada Siguiente: {{ siguiente_entrada.nombre }} →
-                        </a>
-                    </li>
-                    {% else %}
-                    <li class="page-item disabled">
-                        <span class="btn btn-outline-secondary disabled">No hay entrada siguiente →</span>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
         </div>
     </div>
-</div>
-
+</article>
 {% endblock %}
