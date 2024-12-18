@@ -13,40 +13,269 @@
         <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
         <link href="{% static 'core/css/styles.css' %}" rel="stylesheet" />
         <link href="{% static 'core/css/custom.css' %}" rel="stylesheet" />
+        <style>
+            :root {
+                --navbar-height: 70px;
+            }
+
+            #mainNav {
+                background-color: rgba(255, 255, 255, 0.98);
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                transition: all 0.3s ease;
+                height: var(--navbar-height);
+                padding: 0;
+            }
+
+            #mainNav .navbar-brand {
+                padding: 0;
+                margin-right: 2rem;
+            }
+
+            #mainNav .navbar-brand img {
+                height: 40px;
+                transition: all 0.3s ease;
+            }
+
+            #mainNav.is-fixed {
+                background-color: rgba(255, 255, 255, 0.98);
+                box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            }
+
+            .navbar-nav {
+                align-items: center;
+                height: var(--navbar-height);
+            }
+
+            .nav-item {
+                height: 100%;
+                display: flex;
+                align-items: center;
+                margin: 0;
+            }
+
+            .nav-link {
+                color: #333 !important;
+                font-weight: 500;
+                padding: 0 1.2rem !important;
+                height: 100%;
+                display: flex !important;
+                align-items: center;
+                position: relative;
+                transition: all 0.3s ease;
+            }
+
+            .nav-link::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 0;
+                height: 3px;
+                background-color: var(--primary-color);
+                transition: all 0.3s ease;
+            }
+
+            .nav-link:hover {
+                color: var(--primary-color) !important;
+            }
+
+            .nav-link:hover::after {
+                width: 100%;
+            }
+
+            .nav-divider {
+                height: 30px;
+                width: 1px;
+                background-color: #e0e0e0;
+                margin: 0 0.5rem;
+            }
+
+            .btn-create-post {
+                background-color: var(--primary-color);
+                color: white !important;
+                padding: 0.6rem 1.2rem !important;
+                border-radius: 20px;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin: 0 1rem;
+            }
+
+            .btn-create-post:hover {
+                background-color: var(--primary-color-dark);
+                transform: translateY(-2px);
+            }
+
+            .btn-create-post::after {
+                display: none;
+            }
+
+            .dropdown-menu {
+                border: none;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                border-radius: 10px;
+                padding: 0.5rem;
+                min-width: 200px;
+            }
+
+            .dropdown-item {
+                padding: 0.7rem 1rem;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                border-radius: 6px;
+                transition: all 0.3s ease;
+            }
+
+            .dropdown-item:hover {
+                background-color: #f8f9fa;
+                color: var(--primary-color);
+            }
+
+            .dropdown-divider {
+                margin: 0.5rem 0;
+            }
+
+            .search-link {
+                width: 40px;
+                height: 40px;
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                background-color: #f8f9fa;
+                margin-left: 0.5rem;
+            }
+
+            .search-link:hover {
+                background-color: #e9ecef;
+            }
+
+            .search-link::after {
+                display: none;
+            }
+
+            @media (max-width: 991.98px) {
+                #mainNav {
+                    height: auto;
+                    padding: 0.5rem 1rem;
+                }
+
+                .navbar-nav {
+                    background-color: #191919;
+                    padding: 1rem;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                    height: auto;
+                }
+
+                .nav-item {
+                    height: auto;
+                }
+
+                .nav-link {
+                    padding: 0.8rem !important;
+                    height: auto;
+                }
+
+                .nav-divider {
+                    display: none;
+                }
+
+                .btn-create-post {
+                    width: 100%;
+                    justify-content: center;
+                    margin: 0.5rem 0;
+                }
+
+                .search-link {
+                    width: 100%;
+                    height: auto;
+                    border-radius: 6px;
+                    padding: 0.8rem !important;
+                    justify-content: flex-start;
+                    gap: 8px;
+                    background-color: transparent;
+                }
+
+                .search-link .d-lg-none {
+                    display: inline !important;
+                }
+            }
+        </style>
     </head>
     <body class="{% block body_class %}{% endblock %}">
         <!-- Navigation-->
-        <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+        <nav class="navbar navbar-expand-lg navbar-light" id="mainNav">
             <div class="container px-4 px-lg-5">
-                <a class="navbar-brand" href="{% url 'index' %}">
+                <a class="navbar-brand" href="{% url 'core:index' %}">
                     <img src="{% static 'core/img/logo.png' %}" alt="Monster Hunter Blog Logo">
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-                    Menu
                     <i class="fas fa-bars"></i>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarResponsive">
-                    <ul class="navbar-nav ms-auto py-4 py-lg-0">
-                        <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'small_monsters' %}">Monstruos Pequeños</a></li>
-                        <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'large_monsters' %}">Monstruos Grandes</a></li>
-                        <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'elder_dragons' %}">Dragones Ancianos</a></li>
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:small_monsters' %}">
+                                <i class="fas fa-bug"></i>
+                                <span class="ms-2">Monstruos Pequeños</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:large_monsters' %}">
+                                <i class="fas fa-dragon"></i>
+                                <span class="ms-2">Monstruos Grandes</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:elder_dragons' %}">
+                                <i class="fas fa-crown"></i>
+                                <span class="ms-2">Dragones Ancianos</span>
+                            </a>
+                        </li>
+                        
                         {% if user.is_authenticated %}
-                            <li class="nav-item"><a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'blog:crear_entrada' %}">Crear Entrada</a></li>
+                            <div class="nav-divider"></div>
                             <li class="nav-item">
-                                <a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'logout' %}">
-                                    <i class="fas fa-sign-out-alt"></i>
-                                    <span class="d-lg-none">Cerrar Sesión ({{ user.username }})</span>
+                                <a href="{% url 'blog:crear_entrada' %}" class="nav-link btn-create-post">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Crear Post</span>
                                 </a>
                             </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-user"></i>
+                                    <span class="ms-2">{{ user.username }}</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'core:user_profile' user.username %}">
+                                            <i class="fas fa-id-card"></i>
+                                            <span>Mi Perfil</span>
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'logout' %}">
+                                            <i class="fas fa-sign-out-alt"></i>
+                                            <span>Cerrar Sesión</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
                         {% else %}
+                            <div class="nav-divider"></div>
                             <li class="nav-item">
-                                <a class="nav-link px-lg-3 py-3 py-lg-4" href="{% url 'login' %}">
+                                <a class="nav-link" href="{% url 'login' %}">
                                     <i class="fas fa-sign-in-alt"></i>
-                                    <span class="d-lg-none">Login</span>
+                                    <span class="ms-2 d-lg-inline d-none">Iniciar Sesión</span>
                                 </a>
                             </li>
                         {% endif %}
-                        <li class="nav-item search-item">
+                        <li class="nav-item">
                             <a class="nav-link search-link" href="{% url 'blog:lista_entradas' %}">
                                 <i class="fas fa-search"></i>
                                 <span class="d-lg-none">Buscar</span>

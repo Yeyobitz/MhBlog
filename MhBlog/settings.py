@@ -50,6 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.UserRestrictionMiddleware',
 ]
 
 ROOT_URLCONF = 'MhBlog.urls'
@@ -135,6 +136,6 @@ if not os.path.exists(STATIC_ROOT):
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_REDIRECT_URL = 'index'
+LOGIN_REDIRECT_URL = 'core:index'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = 'login'

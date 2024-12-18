@@ -10,17 +10,26 @@
         <div class="auth-header">
             <h1>Registro</h1>
             <p>Únete a la comunidad de cazadores</p>
-            <div id="konamiMessage" class="konami-message" style="display: none;">
-                <i class="fas fa-star"></i>
-                ¡Código Konami Activado!
-                <button id="activateModRole" class="btn btn-warning btn-sm">
-                    <i class="fas fa-user-shield"></i>
-                    Activar Rol de Moderador
-                </button>
+            <div id="_k" class="konami-message" style="display: none;">
+                <div class="activation-indicator"></div>
+                <div class="konami-content">
+                    <div class="stars-container">
+                        <i class="fas fa-star star-left"></i>
+                        <span id="_km" class="requiem-text">MOHHAMED ABDUL</span>
+                        <i class="fas fa-star star-right"></i>
+                    </div>
+                    <div class="button-container">
+                        <button id="_ar" class="btn-requiem" style="display: none;">
+                            <i class="fas fa-dragon"></i>
+                            <span id="_bt">YES, I AM</span>
+                            <i class="fas fa-dragon fa-flip-horizontal"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <form method="post" class="auth-form">
+        <form method="post" class="auth-form" id="_rf">
             {% csrf_token %}
             
             {% if form.errors %}
@@ -89,70 +98,293 @@
 
 <style>
 .konami-message {
-    background: rgba(255, 215, 0, 0.2);
-    border: 2px solid gold;
-    padding: 1rem;
+    background: rgba(0, 0, 0, 0.85);
+    border: 3px solid #ffd700;
+    padding: 1.5rem;
     margin: 1rem 0;
-    border-radius: 10px;
+    border-radius: 15px;
     text-align: center;
-    color: gold;
-    animation: glow 1.5s ease-in-out infinite alternate;
+    color: #ffd700;
+    animation: glow 2s ease-in-out infinite alternate;
+    user-select: none;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+    transition: all 1s ease;
+}
+
+.konami-message.activated {
+    border-color: #9370DB;
+    color: #9370DB;
+    animation: glowPurple 2s ease-in-out infinite alternate;
+}
+
+.konami-content {
+    position: relative;
+    z-index: 1;
+}
+
+.stars-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.requiem-text {
+    font-size: 1.5rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700;
+    transition: text-shadow 1s ease;
+}
+
+.activated .requiem-text {
+    text-shadow: 0 0 10px #9370DB, 0 0 20px #9370DB;
+}
+
+.star-left, .star-right {
+    font-size: 1.2rem;
+    animation: starPulse 1.5s ease-in-out infinite alternate;
+    color: #ffd700;
+    transition: color 1s ease;
+}
+
+.activated .star-left,
+.activated .star-right {
+    color: #9370DB;
+}
+
+.star-left {
+    animation-delay: 0.5s;
+}
+
+.btn-requiem {
+    background: linear-gradient(45deg, #b8860b, #ffd700, #b8860b);
+    color: #000;
+    border: none;
+    padding: 0.8rem 2rem;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.btn-requiem:hover:not(:disabled) {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.7);
+    background: linear-gradient(45deg, #ffd700, #b8860b, #ffd700);
+}
+
+.btn-requiem:disabled {
+    opacity: 0.9;
+    cursor: default;
+    transform: none;
+    animation: purpleTransform 1s forwards;
+}
+
+.btn-requiem i {
+    font-size: 1.2rem;
+    color: #8b0000;
+    transition: color 1s ease;
+}
+
+.btn-requiem.activated i {
+    color: #4B0082;
+}
+
+.activation-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, transparent 30%, rgba(255, 215, 0, 0.1) 70%);
+    opacity: 0;
+    transition: all 0.5s ease;
+    pointer-events: none;
+}
+
+.activation-indicator.active {
+    opacity: 1;
+    background: radial-gradient(circle at center, transparent 30%, rgba(147, 112, 219, 0.1) 70%);
+    animation: purpleBackgroundPulse 2s ease-in-out infinite;
+}
+
+@keyframes purpleTransform {
+    0% {
+        background: linear-gradient(45deg, #b8860b, #ffd700, #b8860b);
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+    }
+    50% {
+        background: linear-gradient(45deg, #9370DB, #BA55D3, #9370DB);
+        box-shadow: 0 0 30px rgba(147, 112, 219, 0.8);
+    }
+    100% {
+        background: linear-gradient(45deg, #4B0082, #9370DB, #4B0082);
+        box-shadow: 0 0 20px rgba(147, 112, 219, 0.6);
+    }
+}
+
+@keyframes purpleBackgroundPulse {
+    0% {
+        opacity: 0.1;
+        background: radial-gradient(circle at center, transparent 30%, rgba(147, 112, 219, 0.1) 70%);
+    }
+    50% {
+        opacity: 0.3;
+        background: radial-gradient(circle at center, transparent 30%, rgba(147, 112, 219, 0.2) 70%);
+    }
+    100% {
+        opacity: 0.1;
+        background: radial-gradient(circle at center, transparent 30%, rgba(147, 112, 219, 0.1) 70%);
+    }
+}
+
+@keyframes glowPurple {
+    from {
+        box-shadow: 0 0 10px #9370DB, 0 0 20px #9370DB, inset 0 0 10px rgba(147, 112, 219, 0.5);
+    }
+    to {
+        box-shadow: 0 0 20px #9370DB, 0 0 40px #9370DB, inset 0 0 20px rgba(147, 112, 219, 0.7);
+    }
 }
 
 @keyframes glow {
     from {
-        box-shadow: 0 0 5px gold, 0 0 10px gold, 0 0 15px gold;
+        box-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700, inset 0 0 10px rgba(255, 215, 0, 0.5);
     }
     to {
-        box-shadow: 0 0 10px gold, 0 0 20px gold, 0 0 30px gold;
+        box-shadow: 0 0 20px #ffd700, 0 0 40px #ffd700, inset 0 0 20px rgba(255, 215, 0, 0.7);
     }
 }
 
-#activateModRole {
-    margin-top: 0.5rem;
-    background-color: gold;
-    border-color: gold;
-    color: #000;
-    font-weight: bold;
-    transition: all 0.3s ease;
+@keyframes starPulse {
+    from {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+    to {
+        transform: scale(1.2);
+        opacity: 1;
+    }
 }
 
-#activateModRole:hover {
-    background-color: #ffd700;
-    transform: scale(1.05);
+.button-container {
+    margin-top: 1rem;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.button-container::before,
+.button-container::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 50px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #ffd700, transparent);
+    transition: background 1s ease;
+}
+
+.activated .button-container::before,
+.activated .button-container::after {
+    background: linear-gradient(90deg, transparent, #9370DB, transparent);
+}
+
+.button-container::before {
+    left: 5%;
+}
+
+.button-container::after {
+    right: 5%;
+}
+
+.activation-text {
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #ffd700;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.5s ease;
+}
+
+.activation-text.active {
+    opacity: 1;
+    transform: translateY(0);
+    color: #9370DB;
 }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
-    let konamiIndex = 0;
+(function() {
+    const _0x4f8d=['value','role','querySelector','moderador','textContent','display','style','block','addEventListener','keydown','key','toLowerCase','none','_k','getElementById','_ar','_bt','ゴゴゴゴ','disabled','classList','add','activated','_at','active'];
     
-    document.addEventListener('keydown', function(e) {
-        // Convertir 'B' y 'A' a minúsculas para la comparación
-        const key = e.key.toLowerCase();
+    function _0x1f8b(d,e){const f=_0x4f8d;return f[d];}
+    
+    const _0xb2c3=function(){
+        const _0x3a=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+        let _0x5c=0;
+        let _0x7d=false;
+        let _0x9e=Date.now();
         
-        // Verificar si la tecla presionada coincide con la siguiente en la secuencia
-        if (key === konamiCode[konamiIndex].toLowerCase()) {
-            konamiIndex++;
-            
-            // Si se completó la secuencia
-            if (konamiIndex === konamiCode.length) {
-                document.getElementById('konamiMessage').style.display = 'block';
-                konamiIndex = 0; // Reiniciar para permitir activar el código nuevamente
+        document[_0x1f8b(8)](_0x1f8b(9),function(e){
+            const _0x2d=e[_0x1f8b(10)][_0x1f8b(11)]();
+            if(_0x7d || Date.now()-_0x9e>30000) {
+                _0x5c=0;
+                _0x7d=false;
+                return;
             }
-        } else {
-            konamiIndex = 0; // Reiniciar si se presiona una tecla incorrecta
-        }
-    });
+            
+            if(_0x2d===_0x3a[_0x5c][_0x1f8b(11)]()){
+                _0x5c++;
+                if(_0x5c===1) _0x9e=Date.now();
+                
+                if(_0x5c===_0x3a.length){
+                    if(Date.now()-_0x9e<10000){
+                        document[_0x1f8b(14)](_0x1f8b(13))[_0x1f8b(6)][_0x1f8b(5)]=_0x1f8b(7);
+                        setTimeout(()=>{
+                            document[_0x1f8b(14)](_0x1f8b(15))[_0x1f8b(6)][_0x1f8b(5)]=_0x1f8b(7);
+                        },1000);
+                        _0x7d=true;
+                    }
+                    _0x5c=0;
+                }
+            }else{
+                _0x5c=0;
+            }
+        });
+        
+        document[_0x1f8b(14)](_0x1f8b(15))[_0x1f8b(8)]('click',function(){
+            if(!_0x7d) return;
+            document[_0x1f8b(2)]('input[name="'+_0x1f8b(1)+'"]')[_0x1f8b(0)]=_0x1f8b(3);
+            this[_0x1f8b(18)]=true;
+            this[_0x1f8b(19)][_0x1f8b(20)](_0x1f8b(21));
+            document[_0x1f8b(14)](_0x1f8b(16))[_0x1f8b(4)]=_0x1f8b(17);
+            document[_0x1f8b(14)](_0x1f8b(13))[_0x1f8b(19)][_0x1f8b(20)](_0x1f8b(21));
+            document[_0x1f8b(2)]('.activation-indicator')[_0x1f8b(19)][_0x1f8b(20)](_0x1f8b(23));
+        });
+    };
     
-    // Activar rol de moderador
-    document.getElementById('activateModRole').addEventListener('click', function() {
-        document.querySelector('input[name="role"]').value = 'moderador';
-        this.textContent = '¡Rol de Moderador Activado!';
-        this.disabled = true;
-    });
-});
+    if(document.readyState==='loading'){
+        document.addEventListener('DOMContentLoaded',_0xb2c3);
+    }else{
+        _0xb2c3();
+    }
+})();
 </script>
 {% endblock %}
 

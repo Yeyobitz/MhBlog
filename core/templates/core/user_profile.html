@@ -1,0 +1,681 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container px-4 px-lg-5 mt-5">
+    <div class="profile-container">
+        <!-- Sección de Información -->
+        <section class="profile-info">
+            <div class="user-avatar">
+                {% if profile_user.profile.role == 'admin' %}
+                    <i class="fas fa-crown"></i>
+                {% elif profile_user.profile.role == 'moderador' %}
+                    <i class="fas fa-shield-halved"></i>
+                {% else %}
+                    <i class="fas fa-user"></i>
+                {% endif %}
+            </div>
+            <h1 class="username">{{ profile_user.username }}</h1>
+            <div class="user-role">
+                <span class="role-badge role-{{ profile_user.profile.role }}">
+                    {{ profile_user.profile.get_role_display }}
+                </span>
+            </div>
+            
+            <div class="user-stats">
+                <a href="#posts" class="stat-card" onclick="scrollToSection('posts')">
+                    <i class="fas fa-scroll"></i>
+                    <div class="stat-value">{{ stats.total_posts }}</div>
+                    <div class="stat-label">Posts</div>
+                </a>
+                <a href="#comments" class="stat-card" onclick="scrollToSection('comments')">
+                    <i class="fas fa-comments"></i>
+                    <div class="stat-value">{{ stats.total_comments }}</div>
+                    <div class="stat-label">Comentarios</div>
+                </a>
+                <div class="stat-card">
+                    <i class="fas fa-calendar-alt"></i>
+                    <div class="stat-value">{{ stats.join_date|date:"d/m/Y" }}</div>
+                    <div class="stat-label">Fecha de registro</div>
+                </div>
+            </div>
+
+            {% if active_restrictions %}
+            <div class="restrictions-alert">
+                <div class="alert-content">
+                    {% for restriction in active_restrictions %}
+                    <div class="restriction-item">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div class="restriction-info">
+                            <div class="restriction-header">
+                                {{ restriction.get_restriction_type_display }}
+                                <span class="restriction-duration">{{ restriction.get_duration_days_display }}</span>
+                            </div>
+                            <div class="restriction-meta">
+                                Termina el {{ restriction.end_date|date:"d/m/Y H:i" }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if can_restrict and not is_own_profile %}
+            <div class="moderation-controls">
+                <button class="btn btn-warning" onclick="toggleModerationPanel()">
+                    <i class="fas fa-gavel"></i> Panel de Moderación
+                </button>
+                <div id="moderationPanel" class="moderation-panel" style="display: none;">
+                    <form method="post" action="{% url 'core:restrict_user' profile_user.username %}">
+                        {% csrf_token %}
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="restriction_type">Tipo</label>
+                                <select name="restriction_type" id="restriction_type" class="form-control" required>
+                                    <option value="posts">Posts</option>
+                                    <option value="comments">Comentarios</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="duration_days">Duración</label>
+                                <select name="duration_days" id="duration_days" class="form-control" required>
+                                    <option value="1">1 día</option>
+                                    <option value="7">7 días</option>
+                                    <option value="30">30 días</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="reason">Razón</label>
+                            <textarea name="reason" id="reason" class="form-control" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="fas fa-ban"></i> Aplicar Restricción
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Sección de Posts -->
+        <section id="posts" class="content-section">
+            <h2><i class="fas fa-scroll"></i> Posts Recientes</h2>
+            {% if posts %}
+            <div class="content-scroll">
+                <div class="scroll-arrow left" onclick="scrollContent('posts-container', -1)">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                <div class="content-container" id="posts-container">
+                    {% for post in posts %}
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3>{{ post.nombre }}</h3>
+                            <div class="card-meta">
+                                <span><i class="fas fa-calendar"></i> {{ post.fecha_creacion|date:"d/m/Y" }}</span>
+                                <span><i class="fas fa-dragon"></i> {{ post.monster.name }}</span>
+                            </div>
+                        </div>
+                        <p class="card-preview">{{ post.resumen|truncatewords:30 }}</p>
+                        <div class="card-actions">
+                            <a href="{% url 'blog:detalle_entrada' post.id %}" class="btn btn-primary">
+                                <i class="fas fa-eye"></i> Ver
+                            </a>
+                            {% if is_own_profile or can_restrict %}
+                            <form method="post" action="{% url 'core:delete_post' post.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash"></i> Eliminar
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="scroll-arrow right" onclick="scrollContent('posts-container', 1)">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+            {% else %}
+            <div class="no-content">
+                <i class="fas fa-scroll"></i>
+                <p>No hay posts para mostrar</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Sección de Comentarios -->
+        <section id="comments" class="content-section">
+            <h2><i class="fas fa-comments"></i> Comentarios Recientes</h2>
+            {% if comments %}
+            <div class="content-scroll">
+                <div class="scroll-arrow left" onclick="scrollContent('comments-container', -1)">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                <div class="content-container" id="comments-container">
+                    {% for comment in comments %}
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h3>Re: {{ comment.entrada.nombre }}</h3>
+                            <div class="card-meta">
+                                <span><i class="fas fa-calendar"></i> {{ comment.fecha|date:"d/m/Y" }}</span>
+                            </div>
+                        </div>
+                        <p class="card-preview">{{ comment.contenido|truncatewords:30 }}</p>
+                        <div class="card-actions">
+                            <a href="{% url 'blog:detalle_entrada' comment.entrada.id %}" class="btn btn-primary">
+                                <i class="fas fa-eye"></i> Ver
+                            </a>
+                            {% if is_own_profile or can_restrict %}
+                            <form method="post" action="{% url 'core:delete_comment' comment.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="fas fa-trash"></i> Eliminar
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="scroll-arrow right" onclick="scrollContent('comments-container', 1)">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </div>
+            {% else %}
+            <div class="no-content">
+                <i class="fas fa-comments"></i>
+                <p>No hay comentarios para mostrar</p>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+</div>
+
+<style>
+.profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Sección de Información */
+.profile-info {
+    text-align: center;
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.user-avatar {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 1.5rem;
+    background: var(--primary-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 3rem;
+}
+
+.username {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.user-role {
+    margin-bottom: 2rem;
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+.role-normal {
+    background: #f8f9fa;
+    color: #6c757d;
+}
+
+.role-moderador {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.role-admin {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.user-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.stat-card {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 10px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+}
+
+a.stat-card:hover {
+    transform: translateY(-3px);
+    background: #e9ecef;
+}
+
+.stat-card i {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    font-size: 1rem;
+    color: #6c757d;
+}
+
+/* Sección de Contenido */
+.content-section {
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.content-section h2 {
+    font-size: 1.8rem;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.content-section h2 i {
+    margin-right: 0.5rem;
+}
+
+.content-scroll {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.content-container {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 1rem 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.content-container::-webkit-scrollbar {
+    display: none;
+}
+
+.scroll-arrow {
+    width: 40px;
+    height: 40px;
+    background: #f8f9fa;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.scroll-arrow:hover {
+    background: #e9ecef;
+}
+
+.content-card {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1.2rem;
+    min-width: 300px;
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e0e0e0;
+    height: 250px;
+}
+
+.content-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    margin-bottom: 0.5rem;
+}
+
+.card-header h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.25rem;
+    color: var(--primary-color);
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.3;
+}
+
+.card-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.card-preview {
+    flex: 1;
+    margin-bottom: 0.75rem;
+    color: #495057;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+}
+
+.card-actions {
+    display: flex !important;
+    gap: 0.5rem !important;
+    margin-top: auto !important;
+    height: 35px !important;
+}
+
+.card-actions > * {
+    flex: 1 !important;
+}
+
+.card-actions .btn,
+.card-actions form .btn {
+    width: 100% !important;
+    height: 100% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    padding: 0.5rem !important;
+    font-size: 0.9rem !important;
+    border-radius: 6px !important;
+    transition: all 0.3s ease !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+}
+
+.card-actions .btn-primary {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+.card-actions .btn-primary:hover {
+    background-color: var(--primary-hover) !important;
+    border-color: var(--primary-hover) !important;
+    transform: translateY(-2px) !important;
+}
+
+.card-actions .btn-danger {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: white !important;
+}
+
+.card-actions .btn-danger:hover {
+    background-color: #c82333 !important;
+    border-color: #bd2130 !important;
+    transform: translateY(-2px) !important;
+}
+
+.card-actions form {
+    margin: 0 !important;
+    padding: 0 !important;
+    flex: 1 !important;
+}
+
+/* Restricciones */
+.restrictions-alert {
+    margin: 2rem 0;
+    padding: 1rem;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 10px;
+}
+
+.restriction-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.restriction-item:last-child {
+    margin-bottom: 0;
+}
+
+.restriction-item i {
+    color: #dc3545;
+    font-size: 1.2rem;
+}
+
+.restriction-info {
+    flex-grow: 1;
+}
+
+.restriction-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 500;
+    color: #721c24;
+}
+
+.restriction-meta {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-top: 0.5rem;
+}
+
+/* Panel de Moderación */
+.moderation-controls {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.moderation-panel {
+    margin-top: 1rem;
+    padding: 1.5rem;
+    background: #fff3cd;
+    border: 1px solid #ffeeba;
+    border-radius: 10px;
+    text-align: left;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    font-weight: 500;
+    color: #856404;
+    margin-bottom: 0.5rem;
+}
+
+.form-group textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .user-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .content-card {
+        min-width: 250px;
+        max-width: 250px;
+    }
+}
+</style>
+
+<script>
+let postsPage = 1;
+let commentsPage = 1;
+let loadingPosts = false;
+let loadingComments = false;
+let hasMorePosts = true;
+let hasMoreComments = true;
+
+function scrollContent(containerId, direction) {
+    const container = document.getElementById(containerId);
+    const scrollAmount = 330; // card width + gap
+    
+    // Si estamos cerca del final y scrolleamos hacia la derecha, cargar más contenido
+    if (direction > 0 && 
+        container.scrollLeft + container.clientWidth >= container.scrollWidth - scrollAmount) {
+        if (containerId === 'posts-container' && !loadingPosts && hasMorePosts) {
+            loadMoreContent('posts');
+        } else if (containerId === 'comments-container' && !loadingComments && hasMoreComments) {
+            loadMoreContent('comments');
+        }
+    }
+    
+    container.scrollBy({
+        left: scrollAmount * direction,
+        behavior: 'smooth'
+    });
+}
+
+async function loadMoreContent(contentType) {
+    if (contentType === 'posts' && loadingPosts) return;
+    if (contentType === 'comments' && loadingComments) return;
+    
+    const container = document.getElementById(`${contentType}-container`);
+    const page = contentType === 'posts' ? ++postsPage : ++commentsPage;
+    
+    if (contentType === 'posts') loadingPosts = true;
+    else loadingComments = true;
+    
+    try {
+        const response = await fetch(
+            `?${contentType}_page=${page}&content_type=${contentType}`,
+            {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }
+        );
+        
+        const html = await response.text();
+        
+        // Si no hay más contenido, marcar como finalizado
+        if (!html.trim()) {
+            if (contentType === 'posts') {
+                hasMorePosts = false;
+                --postsPage; // Revertir el incremento de página
+            } else {
+                hasMoreComments = false;
+                --commentsPage; // Revertir el incremento de página
+            }
+            return;
+        }
+        
+        // Agregar el nuevo contenido
+        container.insertAdjacentHTML('beforeend', html);
+    } catch (error) {
+        console.error('Error cargando contenido:', error);
+        // Revertir el incremento de página en caso de error
+        if (contentType === 'posts') --postsPage;
+        else --commentsPage;
+    } finally {
+        if (contentType === 'posts') loadingPosts = false;
+        else loadingComments = false;
+    }
+}
+
+// Observar cuando los contenedores están cerca del final
+function setupIntersectionObserver() {
+    const options = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.9
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const container = entry.target;
+                if (container.id === 'posts-container' && !loadingPosts && hasMorePosts) {
+                    loadMoreContent('posts');
+                } else if (container.id === 'comments-container' && !loadingComments && hasMoreComments) {
+                    loadMoreContent('comments');
+                }
+            }
+        });
+    }, options);
+    
+    const postsContainer = document.getElementById('posts-container');
+    const commentsContainer = document.getElementById('comments-container');
+    
+    if (postsContainer) observer.observe(postsContainer);
+    if (commentsContainer) observer.observe(commentsContainer);
+}
+
+function toggleModerationPanel() {
+    const panel = document.getElementById('moderationPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+function scrollToSection(sectionId) {
+    const section = document.getElementById(sectionId);
+    section.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', setupIntersectionObserver);
+</script>
+{% endblock %} 

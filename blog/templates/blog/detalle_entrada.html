@@ -146,7 +146,9 @@
                         <div class="comment-header">
                             <div class="comment-author">
                                 <i class="fas fa-user"></i>
-                                <strong>{{ comentario.autor.username }}</strong>
+                                <a href="{% url 'core:user_profile' comentario.autor.username %}" class="author-link">
+                                    <strong>{{ comentario.autor.username }}</strong>
+                                </a>
                             </div>
                             <span class="comment-date">
                                 <i class="fas fa-clock"></i>

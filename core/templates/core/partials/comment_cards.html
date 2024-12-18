@@ -1,0 +1,24 @@
+{% for comment in comments %}
+<div class="content-card">
+    <div class="card-header">
+        <h3>Re: {{ comment.entrada.nombre }}</h3>
+        <div class="card-meta">
+            <span><i class="fas fa-calendar"></i> {{ comment.fecha|date:"d/m/Y" }}</span>
+        </div>
+    </div>
+    <p class="card-preview">{{ comment.contenido|truncatewords:30 }}</p>
+    <div class="card-actions">
+        <a href="{% url 'blog:detalle_entrada' comment.entrada.id %}" class="btn btn-primary">
+            <i class="fas fa-eye"></i> Ver
+        </a>
+        {% if is_own_profile or can_restrict %}
+        <form method="post" action="{% url 'core:delete_comment' comment.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Eliminar
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endfor %} 
