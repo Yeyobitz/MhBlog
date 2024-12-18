@@ -1,0 +1,17 @@
+<!-- Para el index -->
+<div class="entry-card entry-card-small">
+    <div class="entry-image">
+        {% if entrada.imagen %}
+            <img src="{{ entrada.imagen.url }}" alt="{{ entrada.nombre }}">
+        {% endif %}
+    </div>
+    <div class="entry-content">
+        <h3>{{ entrada.nombre }}</h3>
+        <span class="entry-type">{{ entrada.monster.monster_type.name }}</span>
+        <p class="entry-summary">{{ entrada.resumen|truncatewords:30 }}</p>
+        <div class="entry-footer">
+            <small class="text-muted">Por {{ entrada.autor.username|default:"Anónimo" }} - {{ entrada.fecha_creacion|date:"d/m/Y" }}</small>
+            <a href="{% url 'blog:detalle_entrada' entrada.id %}" class="btn btn-primary">Leer más</a>
+        </div>
+    </div>
+</div> 

@@ -1,0 +1,64 @@
+<!-- Para las páginas de monstruos -->
+<div class="monster-card">
+    <div class="monster-header">
+        <h3>{{ entrada.nombre }}</h3>
+        <span class="monster-type">{{ entrada.monster.monster_type.name }}</span>
+    </div>
+    
+    <div class="monster-content">
+        <div class="monster-info">
+            <!-- Elementos -->
+            <div class="info-section">
+                <h4>Elementos</h4>
+                <div class="badge-container">
+                    {% if entrada.monster.elements.exists %}
+                        {% for element in entrada.monster.elements.all %}
+                            <span class="badge badge-{{ element.name|lower }}">{{ element.name }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="badge badge-neutral">Sin elementos</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Estados -->
+            <div class="info-section">
+                <h4>Estados</h4>
+                <div class="badge-container">
+                    {% if entrada.monster.ailments.exists %}
+                        {% for ailment in entrada.monster.ailments.all %}
+                            <span class="badge badge-{{ ailment.name|lower }}">{{ ailment.name }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="badge badge-neutral">Sin estados</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Debilidades -->
+            <div class="info-section">
+                <h4>Debilidades</h4>
+                <div class="badge-container">
+                    {% if entrada.monster.weaknesses.exists %}
+                        {% for weakness in entrada.monster.weaknesses.all %}
+                            <span class="badge badge-weakness">{{ weakness.name }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <span class="badge badge-neutral">Sin debilidades conocidas</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="monster-image-container">
+            {% if entrada.imagen %}
+                <img src="{{ entrada.imagen.url }}" alt="{{ entrada.nombre }}" class="monster-image">
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="monster-footer">
+        <p class="monster-description">{{ entrada.descripcion|truncatewords:50 }}</p>
+        <a href="{% url 'blog:detalle_entrada' entrada.id %}" class="btn-details">Ver detalles</a>
+    </div>
+</div> 

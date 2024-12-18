@@ -1,0 +1,160 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block body_class %}auth-page{% endblock %}
+{% block main_class %}auth-main{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="glass-card">
+        <div class="auth-header">
+            <h1>Registro</h1>
+            <p>Únete a la comunidad de cazadores</p>
+            <div id="konamiMessage" class="konami-message" style="display: none;">
+                <i class="fas fa-star"></i>
+                ¡Código Konami Activado!
+                <button id="activateModRole" class="btn btn-warning btn-sm">
+                    <i class="fas fa-user-shield"></i>
+                    Activar Rol de Moderador
+                </button>
+            </div>
+        </div>
+
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                Por favor corrige los siguientes errores:
+                <ul>
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {{ form.role }}
+
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}" class="form-label">Nombre de Usuario</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-user"></i>
+                    </span>
+                    {{ form.username }}
+                </div>
+                {% if form.username.help_text %}
+                    <small class="form-text">{{ form.username.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.password1.id_for_label }}" class="form-label">Contraseña</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-lock"></i>
+                    </span>
+                    {{ form.password1 }}
+                </div>
+                {% if form.password1.help_text %}
+                    <small class="form-text">{{ form.password1.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.password2.id_for_label }}" class="form-label">Confirmar Contraseña</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-lock"></i>
+                    </span>
+                    {{ form.password2 }}
+                </div>
+            </div>
+
+            <button type="submit" class="btn-auth">
+                <i class="fas fa-user-plus"></i>
+                Registrarse
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <p>¿Ya tienes una cuenta? <a href="{% url 'login' %}">Inicia sesión aquí</a></p>
+        </div>
+    </div>
+</div>
+
+<style>
+.konami-message {
+    background: rgba(255, 215, 0, 0.2);
+    border: 2px solid gold;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-radius: 10px;
+    text-align: center;
+    color: gold;
+    animation: glow 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        box-shadow: 0 0 5px gold, 0 0 10px gold, 0 0 15px gold;
+    }
+    to {
+        box-shadow: 0 0 10px gold, 0 0 20px gold, 0 0 30px gold;
+    }
+}
+
+#activateModRole {
+    margin-top: 0.5rem;
+    background-color: gold;
+    border-color: gold;
+    color: #000;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+#activateModRole:hover {
+    background-color: #ffd700;
+    transform: scale(1.05);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+    let konamiIndex = 0;
+    
+    document.addEventListener('keydown', function(e) {
+        // Convertir 'B' y 'A' a minúsculas para la comparación
+        const key = e.key.toLowerCase();
+        
+        // Verificar si la tecla presionada coincide con la siguiente en la secuencia
+        if (key === konamiCode[konamiIndex].toLowerCase()) {
+            konamiIndex++;
+            
+            // Si se completó la secuencia
+            if (konamiIndex === konamiCode.length) {
+                document.getElementById('konamiMessage').style.display = 'block';
+                konamiIndex = 0; // Reiniciar para permitir activar el código nuevamente
+            }
+        } else {
+            konamiIndex = 0; // Reiniciar si se presiona una tecla incorrecta
+        }
+    });
+    
+    // Activar rol de moderador
+    document.getElementById('activateModRole').addEventListener('click', function() {
+        document.querySelector('input[name="role"]').value = 'moderador';
+        this.textContent = '¡Rol de Moderador Activado!';
+        this.disabled = true;
+    });
+});
+</script>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}

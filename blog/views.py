@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from .models import EntradaBlog, Comentario, Element, Ailment, Game, MonsterGameInfo, Monster, MonsterType
 from .forms import ComentarioForm, EntradaBlogForm
+from core.forms import RegistroForm
 
 def inicio(request):
     entradas = EntradaBlog.objects.select_related('habitat', 'autor').all()[:5]
@@ -178,18 +179,19 @@ def crear_entrada(request):
 
 def registro(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = RegistroForm(request.POST)
         if form.is_valid():
             user = form.save()
             messages.success(request, '¡Cuenta creada exitosamente!')
             return redirect('login')
     else:
-        form = UserCreationForm()
+        form = RegistroForm()
     
     # Agregar clases de Bootstrap a los campos del formulario
     for field in form.fields.values():
-        field.widget.attrs['class'] = 'form-control'
-        field.widget.attrs['placeholder'] = field.label
+        if field.widget.__class__.__name__ != 'HiddenInput':
+            field.widget.attrs['class'] = 'form-control'
+            field.widget.attrs['placeholder'] = field.label
     
     return render(request, 'registration/registro.html', {'form': form})
 
