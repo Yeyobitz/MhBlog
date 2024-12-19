@@ -6,6 +6,7 @@ from django.core.paginator import Paginator
 from .models import EntradaBlog, Comentario, Element, Ailment, Game, MonsterGameInfo, Monster, MonsterType
 from .forms import ComentarioForm, EntradaBlogForm
 from core.forms import RegistroForm
+from core.utils import group_required
 
 def inicio(request):
     entradas = EntradaBlog.objects.select_related('habitat', 'autor').all()[:5]
@@ -96,6 +97,11 @@ def detalle_entrada(request, id):
     comentarios = entrada.comentarios.select_related('autor').all()
     
     if request.method == 'POST' and request.user.is_authenticated:
+        # Verificar permiso para comentar
+        if not request.user.has_perm('blog.add_comentario'):
+            messages.error(request, 'No tienes permiso para agregar comentarios.')
+            return redirect('blog:detalle_entrada', id=id)
+            
         form = ComentarioForm(request.POST)
         if form.is_valid():
             comentario = form.save(commit=False)
@@ -110,11 +116,13 @@ def detalle_entrada(request, id):
     context = {
         'entrada': entrada,
         'comentarios': comentarios,
-        'form': form
+        'form': form,
+        'can_comment': request.user.is_authenticated and request.user.has_perm('blog.add_comentario')
     }
     return render(request, 'blog/detalle_entrada.html', context)
 
 @login_required
+@group_required(['Usuarios', 'Moderators'])
 def crear_entrada(request):
     if request.method == 'POST':
         form = EntradaBlogForm(request.POST, request.FILES)
@@ -142,7 +150,7 @@ def crear_entrada(request):
                 # Ahora creamos la entrada
                 entrada = form.save(commit=False)
                 entrada.autor = request.user
-                entrada.monster = monster  # Asignamos el monstruo que acabamos de crear
+                entrada.monster = monster
                 entrada.save()
 
                 # Creamos la información del juego
@@ -199,6 +207,7 @@ def login_view(request):
     return render(request, 'core/login.html')
 
 @login_required
+@group_required(['Usuarios', 'Moderators'])
 def agregar_comentario(request, entrada_id):
     if request.method == 'POST':
         entrada = get_object_or_404(EntradaBlog, id=entrada_id)
@@ -211,14 +220,10 @@ def agregar_comentario(request, entrada_id):
                 contenido=contenido
             )
             messages.success(request, 'Comentario agregado exitosamente.')
+            return redirect('blog:detalle_entrada', id=entrada_id)
         
-        # Determinar la página correcta para redireccionar
-        if entrada.tipo in ['Monstruo grande', 'Monstruo chico']:
-            return redirect('monstruos')
-        elif entrada.tipo == 'Flora':
-            return redirect('flora')
-        else:
-            return redirect('fauna')
+    messages.error(request, 'El comentario no puede estar vacío.')
+    return redirect('blog:detalle_entrada', id=entrada_id)
 
 def index(request):
     # Obtener las 9 entradas más recientes
@@ -236,3 +241,20 @@ def index(request):
         'entradas': entradas,
         'show_pagination': False  # Para indicar que no queremos paginación en el index
     })
+
+@login_required
+def delete_post(request, post_id):
+    if not request.user.has_perm('blog.delete_entradablog'):
+        messages.error(request, 'No tienes permiso para eliminar entradas.')
+        return redirect('core:index')
+        
+    post = get_object_or_404(EntradaBlog, id=post_id)
+    
+    # Solo el autor o un admin puede eliminar el post
+    if request.user == post.autor or request.user.is_superuser:
+        post.delete()
+        messages.success(request, 'Post eliminado exitosamente.')
+    else:
+        messages.error(request, 'No tienes permiso para eliminar este post.')
+    
+    return redirect(request.META.get('HTTP_REFERER', 'core:index'))

@@ -7,18 +7,24 @@
         <!-- Sección de Información -->
         <section class="profile-info">
             <div class="user-avatar">
-                {% if profile_user.profile.role == 'admin' %}
+                {% if profile_user.is_superuser %}
                     <i class="fas fa-crown"></i>
-                {% elif profile_user.profile.role == 'moderador' %}
+                {% elif profile_user.groups.all.0.name == 'Moderators' %}
                     <i class="fas fa-shield-halved"></i>
                 {% else %}
                     <i class="fas fa-user"></i>
                 {% endif %}
             </div>
             <h1 class="username">{{ profile_user.username }}</h1>
-            <div class="user-role">
-                <span class="role-badge role-{{ profile_user.profile.role }}">
-                    {{ profile_user.profile.get_role_display }}
+            <div class="user-group">
+                <span class="group-badge group-{{ profile_user.groups.all.0.name|lower }}">
+                    {% if profile_user.is_superuser %}
+                        Administrador
+                    {% elif profile_user.groups.all.0.name == 'Moderators' %}
+                        Moderador
+                    {% else %}
+                        Usuario
+                    {% endif %}
                 </span>
             </div>
             
@@ -230,11 +236,11 @@
     margin-bottom: 0.5rem;
 }
 
-.user-role {
+.user-group {
     margin-bottom: 2rem;
 }
 
-.role-badge {
+.group-badge {
     display: inline-block;
     padding: 0.5rem 1rem;
     border-radius: 20px;
@@ -242,17 +248,17 @@
     font-size: 1rem;
 }
 
-.role-normal {
+.group-usuarios {
     background: #f8f9fa;
     color: #6c757d;
 }
 
-.role-moderador {
+.group-moderators {
     background: #fff3cd;
     color: #856404;
 }
 
-.role-admin {
+.group-admin {
     background: #f8d7da;
     color: #721c24;
 }

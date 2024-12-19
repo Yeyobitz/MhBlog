@@ -123,16 +123,23 @@
         <section class="comments-section">
             <h2>Comentarios de la Comunidad</h2>
             {% if user.is_authenticated %}
-                <form method="post" class="comment-form">
-                    {% csrf_token %}
-                    <div class="form-group">
-                        <textarea name="contenido" class="form-control" rows="3" 
-                                placeholder="Comparte tu experiencia cazando este monstruo..."></textarea>
+                {% if can_comment %}
+                    <form method="post" class="comment-form">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <textarea name="contenido" class="form-control" rows="3" 
+                                    placeholder="Comparte tu experiencia cazando este monstruo..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-comment"></i> Comentar
+                        </button>
+                    </form>
+                {% else %}
+                    <div class="login-prompt">
+                        <i class="fas fa-lock"></i>
+                        <p>No tienes permisos para comentar en esta entrada.</p>
                     </div>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-comment"></i> Comentar
-                    </button>
-                </form>
+                {% endif %}
             {% else %}
                 <div class="login-prompt">
                     <i class="fas fa-lock"></i>

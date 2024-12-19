@@ -239,15 +239,23 @@
                         
                         {% if user.is_authenticated %}
                             <div class="nav-divider"></div>
+                            {% if user.groups.exists or user.is_superuser %}
                             <li class="nav-item">
                                 <a href="{% url 'blog:crear_entrada' %}" class="nav-link btn-create-post">
                                     <i class="fas fa-plus"></i>
                                     <span>Crear Post</span>
                                 </a>
                             </li>
+                            {% endif %}
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-user"></i>
+                                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    {% if user.is_superuser %}
+                                        <i class="fas fa-crown"></i>
+                                    {% elif user.groups.all.0.name == 'Moderators' %}
+                                        <i class="fas fa-shield-halved"></i>
+                                    {% else %}
+                                        <i class="fas fa-user"></i>
+                                    {% endif %}
                                     <span class="ms-2">{{ user.username }}</span>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
@@ -344,10 +352,9 @@
                                 </a>
                             </li>
                         </ul>
-                        <div class="text-center">
-                            <p class="copyright">
-                                Copyright © <a href="https://yeyobitz.dev" target="_blank">yeyobitz.dev</a>
-                            </p>
+                        <div class="text-center py-3">
+                            <p>&copy; 2024 MhBlog. Todos los derechos reservados.</p>
+                            <a href="{% url 'core:contact' %}" class="btn btn-outline-light">Contáctanos</a>
                         </div>
                     </div>
                 </div>

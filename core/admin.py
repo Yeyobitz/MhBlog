@@ -16,13 +16,15 @@ class UserRestrictionInline(admin.TabularInline):
 
 class UserAdmin(BaseUserAdmin):
     inlines = (UserProfileInline, UserRestrictionInline)
-    list_display = ('username', 'email', 'first_name', 'last_name', 'get_role', 'is_staff')
-    list_filter = BaseUserAdmin.list_filter + ('profile__role',)
+    list_display = ('username', 'email', 'first_name', 'last_name', 'get_group', 'is_staff')
+    list_filter = BaseUserAdmin.list_filter + ('groups__name',)
     
-    def get_role(self, obj):
-        return obj.profile.get_role_display()
-    get_role.short_description = 'Rol'
-    get_role.admin_order_field = 'profile__role'
+    def get_group(self, obj):
+        if obj.is_superuser:
+            return 'Administrador'
+        return obj.groups.first().name if obj.groups.exists() else 'Sin grupo'
+    get_group.short_description = 'Grupo'
+    get_group.admin_order_field = 'groups__name'
 
 @admin.register(UserRestriction)
 class UserRestrictionAdmin(admin.ModelAdmin):

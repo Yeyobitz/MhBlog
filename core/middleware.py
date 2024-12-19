@@ -8,9 +8,9 @@ class UserRestrictionMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if request.user.is_authenticated and hasattr(request.user, 'profile'):
+        if request.user.is_authenticated:
             # Las restricciones no se aplican a moderadores y admins
-            if request.user.profile.role in ['moderador', 'admin']:
+            if request.user.groups.filter(name='Moderators').exists() or request.user.is_superuser:
                 return self.get_response(request)
             
             # Verificar restricciones de posts

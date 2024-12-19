@@ -7,13 +7,17 @@ from django.shortcuts import redirect
 from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group, Permission
+from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django.db.models import Count
 from blog.models import Comentario
 from .models import UserRestriction
-from .utils import role_required
+from .utils import group_required
 from django.http import HttpResponse
+from django.core.mail import send_mail
+from django.conf import settings
+from .forms import ContactForm
 
 class CustomLoginView(LoginView):
     template_name = 'registration/login.html'  # Ajusta esto según tu template
@@ -79,7 +83,7 @@ def elder_dragons(request):
 
 @login_required
 def user_profile(request, username):
-    user = get_object_or_404(User.objects.select_related('profile'), username=username)
+    user = get_object_or_404(User, username=username)
     
     # Obtener estadísticas
     stats = {
@@ -113,7 +117,7 @@ def user_profile(request, username):
     ).select_related('restricted_by')
     
     # Verificar si el usuario actual es moderador o admin
-    can_restrict = request.user.profile.role in ['moderador', 'admin']
+    can_restrict = request.user.groups.filter(name='Moderators').exists() or request.user.is_superuser
     is_own_profile = request.user == user
     
     context = {
@@ -150,17 +154,48 @@ def user_profile(request, username):
     
     return render(request, 'core/user_profile.html', context)
 
+def setup_groups():
+    # Crear grupos si no existen
+    usuarios_group, _ = Group.objects.get_or_create(name='Usuarios')
+    moderators_group, _ = Group.objects.get_or_create(name='Moderators')
+    
+    # Obtener los content types para los modelos
+    blog_content_type = ContentType.objects.get_for_model(EntradaBlog)
+    comment_content_type = ContentType.objects.get_for_model(Comentario)
+    
+    # Permisos para usuarios normales (solo crear y editar sus propios contenidos)
+    usuarios_permissions = [
+        Permission.objects.get(codename='add_entradablog', content_type=blog_content_type),
+        Permission.objects.get(codename='add_comentario', content_type=comment_content_type),
+    ]
+    
+    # Permisos para moderadores (pueden gestionar todo el contenido)
+    moderator_permissions = Permission.objects.filter(
+        content_type__in=[blog_content_type, comment_content_type]
+    )
+    
+    # Asignar permisos a los grupos
+    usuarios_group.permissions.set(usuarios_permissions)
+    moderators_group.permissions.set(moderator_permissions)
+    
+    return {
+        'usuarios': usuarios_group,
+        'moderators': moderators_group
+    }
+
 @login_required
 def restrict_user(request, username):
-    # Primero verificamos si el usuario tiene permiso para restringir
-    if request.user.profile.role not in ['moderador', 'admin']:
+    # Verificar si el usuario es moderador o admin
+    if not (request.user.groups.filter(name='Moderators').exists() or request.user.is_superuser):
         messages.error(request, 'No tienes permisos para restringir usuarios.')
         return redirect('core:index')
     
     user = get_object_or_404(User, username=username)
     
     # Verificar que el moderador no pueda restringir a otros moderadores o admins
-    if request.user.profile.role == 'moderador' and user.profile.role in ['moderador', 'admin']:
+    if request.user.groups.filter(name='Moderators').exists() and (
+        user.groups.filter(name='Moderators').exists() or user.is_superuser
+    ):
         messages.error(request, 'No tienes permiso para restringir a moderadores o administradores.')
         return redirect('core:user_profile', username=username)
     
@@ -187,23 +222,22 @@ def restrict_user(request, username):
 def delete_post(request, post_id):
     post = get_object_or_404(EntradaBlog, id=post_id)
     
-    # Verificar permisos según el rol
-    user_role = request.user.profile.role
-    
     # Admin puede borrar cualquier post
-    if user_role == 'admin':
+    if request.user.is_superuser:
         post.delete()
         messages.success(request, 'Post eliminado exitosamente.')
         return redirect(request.META.get('HTTP_REFERER', 'core:user_profile'))
     
     # Moderador puede borrar posts de usuarios normales
-    if user_role == 'moderador' and post.autor.profile.role == 'normal':
+    if request.user.groups.filter(name='Moderators').exists() and not (
+        post.autor.groups.filter(name='Moderators').exists() or post.autor.is_superuser
+    ):
         post.delete()
         messages.success(request, 'Post eliminado exitosamente.')
         return redirect(request.META.get('HTTP_REFERER', 'core:user_profile'))
     
     # Usuario normal solo puede borrar sus propios posts
-    if user_role == 'normal' and request.user == post.autor:
+    if request.user == post.autor:
         post.delete()
         messages.success(request, 'Post eliminado exitosamente.')
         return redirect(request.META.get('HTTP_REFERER', 'core:user_profile'))
@@ -215,27 +249,98 @@ def delete_post(request, post_id):
 def delete_comment(request, comment_id):
     comment = get_object_or_404(Comentario, id=comment_id)
     
-    # Verificar permisos según el rol
-    user_role = request.user.profile.role
-    
     # Admin puede borrar cualquier comentario
-    if user_role == 'admin':
+    if request.user.is_superuser:
         comment.delete()
         messages.success(request, 'Comentario eliminado exitosamente.')
         return redirect(request.META.get('HTTP_REFERER', 'core:user_profile'))
     
     # Moderador puede borrar comentarios de usuarios normales
-    if user_role == 'moderador' and comment.autor.profile.role == 'normal':
+    if request.user.groups.filter(name='Moderators').exists() and not (
+        comment.autor.groups.filter(name='Moderators').exists() or comment.autor.is_superuser
+    ):
         comment.delete()
         messages.success(request, 'Comentario eliminado exitosamente.')
         return redirect(request.META.get('HTTP_REFERER', 'core:user_profile'))
     
     # Usuario normal solo puede borrar sus propios comentarios
-    if user_role == 'normal' and request.user == comment.autor:
+    if request.user == comment.autor:
         comment.delete()
         messages.success(request, 'Comentario eliminado exitosamente.')
         return redirect(request.META.get('HTTP_REFERER', 'core:user_profile'))
     
     messages.error(request, 'No tienes permiso para eliminar este comentario.')
     return redirect(request.META.get('HTTP_REFERER', 'core:user_profile'))
+
+@login_required
+def activate_konami(request):
+    if request.method == 'POST':
+        user = request.user
+        
+        # Verificar que el usuario no sea ya un moderador o admin
+        if not (user.groups.filter(name='Moderators').exists() or user.is_superuser):
+            # Obtener los grupos
+            groups = setup_groups()
+            
+            # Remover del grupo de usuarios normales
+            user.groups.remove(groups['usuarios'])
+            
+            # Agregar al grupo de moderadores
+            user.groups.add(groups['moderators'])
+            
+            messages.success(request, '¡Felicitaciones! Ahora eres un moderador.')
+        else:
+            messages.warning(request, 'Ya tienes privilegios de moderador o administrador.')
+            
+    return redirect('core:index')
+
+def contact(request):
+    if request.method == 'POST':
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            nombre = form.cleaned_data['nombre']
+            email = form.cleaned_data['email']
+            mensaje = form.cleaned_data['mensaje']
+            
+            # Enviar el correo
+            subject = f'Nuevo mensaje de contacto de {nombre}'
+            message = f'''
+Nuevo mensaje de contacto recibido:
+
+Nombre: {nombre}
+Email: {email}
+
+Mensaje:
+{mensaje}
+
+Este mensaje fue enviado desde el formulario de contacto de MhBlog.
+'''
+            from_email = settings.EMAIL_HOST_USER  # Cambiado para usar el email configurado
+            recipient_list = ['yeyobitz@proton.me']
+            
+            try:
+                # Intentar enviar el correo y capturar cualquier error
+                result = send_mail(
+                    subject,
+                    message,
+                    from_email,
+                    recipient_list,
+                    fail_silently=False  # Cambiado para ver errores
+                )
+                
+                if result == 1:
+                    messages.success(request, 'Tu mensaje ha sido enviado correctamente. ¡Gracias por contactarnos!')
+                else:
+                    print(f"El correo no se envió correctamente. Resultado: {result}")
+                    messages.error(request, 'Hubo un error al enviar el mensaje. Por favor, intenta nuevamente.')
+                
+            except Exception as e:
+                print(f"Error detallado al enviar el correo: {str(e)}")
+                messages.error(request, 'Hubo un error al enviar el mensaje. Por favor, intenta nuevamente.')
+            
+            return redirect('core:contact')
+    else:
+        form = ContactForm()
+    
+    return render(request, 'core/contact.html', {'form': form})
 
